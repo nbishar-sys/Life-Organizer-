@@ -13,7 +13,16 @@ interface QuickCaptureSheetProps {
 export function QuickCaptureSheet({ open, onClose, draft, onDraftChange }: QuickCaptureSheetProps) {
   async function handleSubmit(values: EntryFormValues) {
     await createEntry(values)
-    onDraftChange?.({ content: '', type: 'note', tagIds: [], dueDate: null, journalDate: null, pinned: false, source: 'typed' })
+    onDraftChange?.({
+      content: '',
+      type: 'note',
+      tagIds: [],
+      projectId: null,
+      dueDate: null,
+      journalDate: null,
+      pinned: false,
+      source: 'typed',
+    })
     onClose()
   }
 

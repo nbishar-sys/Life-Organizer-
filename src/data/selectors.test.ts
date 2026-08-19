@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  countOpenProjectEntries,
   selectCompletedToday,
   selectInboxEntries,
   selectNotebookEntries,
   selectPinnedEntries,
+  selectProjectEntries,
   selectTodayJournalEntries,
   selectTodayTasks,
 } from './selectors'
@@ -18,6 +20,7 @@ function makeEntry(overrides: Partial<Entry> = {}): Entry {
     content: `entry ${counter}`,
     type: 'note',
     tagIds: [],
+    projectId: null,
     completed: false,
     completedAt: null,
     dueDate: null,
@@ -94,10 +97,11 @@ describe('isUntriaged / selectInboxEntries', () => {
     expect(isUntriaged(makeEntry())).toBe(true)
   })
 
-  it('a tag, due date, or journal date each triage it out of the inbox', () => {
+  it('a tag, due date, journal date, or project each triage it out of the inbox', () => {
     expect(isUntriaged(makeEntry({ tagIds: ['work'] }))).toBe(false)
     expect(isUntriaged(makeEntry({ dueDate: '2026-08-17' }))).toBe(false)
     expect(isUntriaged(makeEntry({ journalDate: '2026-08-17' }))).toBe(false)
+    expect(isUntriaged(makeEntry({ projectId: 'house-reno' }))).toBe(false)
   })
 
   it('selectInboxEntries keeps only untriaged, non-deleted entries', () => {
@@ -128,6 +132,16 @@ describe('selectNotebookEntries', () => {
     expect(selectNotebookEntries([entry], { query: 'domain' })).toHaveLength(1)
   })
 
+  it('filters by project', () => {
+    const inProject = makeEntry({ projectId: 'house-reno' })
+    const notInProject = makeEntry({ projectId: null })
+    const otherProject = makeEntry({ projectId: 'other' })
+    const result = selectNotebookEntries([inProject, notInProject, otherProject], {
+      projectId: 'house-reno',
+    })
+    expect(result.map((e) => e.id)).toEqual([inProject.id])
+  })
+
   it('sorts newest first and does not reorder by pinned status', () => {
     const older = makeEntry({ createdAt: 1000, pinned: true })
     const newer = makeEntry({ createdAt: 2000, pinned: false })
@@ -143,5 +157,35 @@ describe('selectPinnedEntries', () => {
     const unpinned = makeEntry({ pinned: false, updatedAt: 3000 })
     const result = selectPinnedEntries([pinnedOld, pinnedNew, unpinned])
     expect(result.map((e) => e.id)).toEqual([pinnedNew.id, pinnedOld.id])
+  })
+})
+
+describe('selectProjectEntries', () => {
+  it('returns only non-deleted entries in the given project, newest first', () => {
+    const older = makeEntry({ projectId: 'house-reno', createdAt: 1000 })
+    const newer = makeEntry({ projectId: 'house-reno', createdAt: 2000 })
+    const otherProject = makeEntry({ projectId: 'other' })
+    const noProject = makeEntry({ projectId: null })
+    const deleted = makeEntry({ projectId: 'house-reno', deletedAt: Date.now() })
+    const result = selectProjectEntries(
+      [older, newer, otherProject, noProject, deleted],
+      'house-reno',
+    )
+    expect(result.map((e) => e.id)).toEqual([newer.id, older.id])
+  })
+
+  it('a dated task inside a project is still just a normal entry here — Today decides visibility separately', () => {
+    const task = makeEntry({ projectId: 'house-reno', type: 'task', dueDate: '2026-08-17' })
+    expect(selectProjectEntries([task], 'house-reno').map((e) => e.id)).toEqual([task.id])
+  })
+})
+
+describe('countOpenProjectEntries', () => {
+  it('counts non-deleted, non-completed entries in the project', () => {
+    const open = makeEntry({ projectId: 'house-reno', completed: false })
+    const done = makeEntry({ projectId: 'house-reno', type: 'task', completed: true })
+    const deleted = makeEntry({ projectId: 'house-reno', deletedAt: Date.now() })
+    const otherProject = makeEntry({ projectId: 'other' })
+    expect(countOpenProjectEntries([open, done, deleted, otherProject], 'house-reno')).toBe(1)
   })
 })

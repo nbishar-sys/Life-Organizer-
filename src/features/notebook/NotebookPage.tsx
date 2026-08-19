@@ -3,6 +3,7 @@ import { Search } from 'lucide-react'
 import clsx from 'clsx'
 import { useEntries } from '../../hooks/useEntries'
 import { useTags } from '../../hooks/useTags'
+import { useProjects } from '../../hooks/useProjects'
 import { selectNotebookEntries, selectPinnedEntries, type NotebookFilter } from '../../data/selectors'
 import { formatDayHeading, toDateStr } from '../../data/dates'
 import { EntryCard } from '../entries/EntryCard'
@@ -20,17 +21,20 @@ const TYPE_FILTERS: Array<{ value: EntryType | 'all'; label: string }> = [
 export function NotebookPage() {
   const entries = useEntries()
   const tags = useTags() ?? []
+  const projects = useProjects() ?? []
   const [query, setQuery] = useState('')
   const [type, setType] = useState<EntryType | 'all'>('all')
   const [tagId, setTagId] = useState<string>('all')
+  const [projectId, setProjectId] = useState<string>('all')
   const [openEntry, setOpenEntry] = useState<Entry | null>(null)
 
-  const isFiltering = query.trim().length > 0 || type !== 'all' || tagId !== 'all'
+  const isFiltering =
+    query.trim().length > 0 || type !== 'all' || tagId !== 'all' || projectId !== 'all'
 
   const filtered = useMemo(() => {
-    const filter: NotebookFilter = { query, type, tagId }
+    const filter: NotebookFilter = { query, type, tagId, projectId }
     return entries ? selectNotebookEntries(entries, filter) : []
-  }, [entries, query, type, tagId])
+  }, [entries, query, type, tagId, projectId])
 
   const pinned = useMemo(() => (entries ? selectPinnedEntries(entries) : []), [entries])
 
@@ -97,6 +101,20 @@ export function NotebookPage() {
               ))}
             </select>
           )}
+          {projects.length > 0 && (
+            <select
+              value={projectId}
+              onChange={(e) => setProjectId(e.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-600 outline-none focus:border-accent-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+            >
+              <option value="all">All projects</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
@@ -107,7 +125,7 @@ export function NotebookPage() {
           </h2>
           <div className="flex flex-col gap-2">
             {pinned.map((entry) => (
-              <EntryCard key={entry.id} entry={entry} tags={tags} onOpen={setOpenEntry} />
+              <EntryCard key={entry.id} entry={entry} tags={tags} projects={projects} onOpen={setOpenEntry} />
             ))}
           </div>
         </section>
@@ -129,7 +147,13 @@ export function NotebookPage() {
               </h2>
               <div className="flex flex-col gap-2">
                 {dayEntries.map((entry) => (
-                  <EntryCard key={entry.id} entry={entry} tags={tags} onOpen={setOpenEntry} />
+                  <EntryCard
+                    key={entry.id}
+                    entry={entry}
+                    tags={tags}
+                    projects={projects}
+                    onOpen={setOpenEntry}
+                  />
                 ))}
               </div>
             </section>

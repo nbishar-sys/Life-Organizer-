@@ -26,7 +26,9 @@ export function DataBackup() {
     try {
       const bundle = await parseImportFile(file)
       const result = await importBundle(bundle)
-      showToast(`Imported ${result.importedEntries} entries, ${result.importedTags} tags.`)
+      showToast(
+        `Imported ${result.importedEntries} entries, ${result.importedTags} tags, ${result.importedProjects} projects.`,
+      )
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Import failed.')
     } finally {

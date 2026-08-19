@@ -19,10 +19,16 @@ you want to.
   from earlier automatically show up here too — no task silently falls off
   a list, and nothing is destructively rescheduled to make that happen.
 - **Notebook.** Every note and journal entry, searchable, filterable by
-  type and tag, grouped by day.
-- **Inbox.** Anything captured but not yet tagged, dated, or typed. One-tap
-  actions to turn it into a task, a journal entry, or just tag it and move
-  on — entirely optional, Notebook already has everything regardless.
+  type, tag, and project, grouped by day.
+- **Inbox.** Anything captured but not yet tagged, dated, projected, or
+  typed. One-tap actions to turn it into a task, a journal entry, tag it, or
+  add it to a project — entirely optional, Notebook already has everything
+  regardless.
+- **Projects.** A separate home for long-term, low-urgency things you don't
+  want to lose — "House renovation," "Plan the trip" — that would otherwise
+  clutter Today. A project entry can still be a dated task (shows up in
+  Today like normal) or just an idea with no date (stays parked in the
+  project until you're ready for it).
 - **Work / Personal tags** (plus your own custom tags) to slice a mixed-use
   space back apart when you need to.
 - **Local-first.** Everything is stored in this browser only, via

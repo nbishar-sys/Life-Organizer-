@@ -1,20 +1,22 @@
 import clsx from 'clsx'
-import { Check, Mic, Pin } from 'lucide-react'
+import { Check, FolderKanban, Mic, Pin } from 'lucide-react'
 import { formatDueLabel, formatTimestamp, isOverdue, todayStr } from '../../data/dates'
-import type { Entry, Tag } from '../../data/types'
+import type { Entry, Project, Tag } from '../../data/types'
 import { TagChip } from '../../components/ui/TagChip'
 import { toggleTaskComplete } from '../../data/repository'
 
 interface EntryCardProps {
   entry: Entry
   tags: Tag[]
+  projects?: Project[]
   onOpen: (entry: Entry) => void
   /** Hide the due-date row — e.g. inside Today, where grouping already conveys it. */
   hideDueDate?: boolean
 }
 
-export function EntryCard({ entry, tags, onOpen, hideDueDate }: EntryCardProps) {
+export function EntryCard({ entry, tags, projects = [], onOpen, hideDueDate }: EntryCardProps) {
   const entryTags = tags.filter((t) => entry.tagIds.includes(t.id))
+  const project = entry.projectId ? projects.find((p) => p.id === entry.projectId) : undefined
   const overdue =
     entry.type === 'task' && !entry.completed && entry.dueDate
       ? isOverdue(entry.dueDate, todayStr())
@@ -70,6 +72,9 @@ export function EntryCard({ entry, tags, onOpen, hideDueDate }: EntryCardProps) 
             <span className="text-xs text-slate-400 dark:text-slate-500">
               {formatTimestamp(entry.createdAt)}
             </span>
+          )}
+          {project && (
+            <TagChip tag={project} icon={<FolderKanban className="h-3 w-3 shrink-0" />} />
           )}
           {entryTags.map((tag) => (
             <TagChip key={tag.id} tag={tag} />

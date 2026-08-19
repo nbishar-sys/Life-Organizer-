@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Plus, Settings } from 'lucide-react'
 import clsx from 'clsx'
-import { NAV_ITEMS, type NavItem } from './navItems'
+import { MOBILE_NAV_ITEMS, NAV_ITEMS, type NavItem } from './navItems'
 import { useEntries } from '../../hooks/useEntries'
 import { selectInboxEntries } from '../../data/selectors'
 import { QuickCaptureSheet } from '../../features/capture/QuickCaptureSheet'
@@ -78,6 +78,26 @@ export function AppShell() {
       </aside>
 
       <main className="min-h-full flex-1 pb-24 md:pb-8">
+        {/* Mobile-only header: sidebar carries branding + Settings on
+            desktop, but the bottom tab bar deliberately excludes Settings
+            (see navItems.ts), so it needs a home here instead. */}
+        <div className="flex items-center justify-between px-4 pt-4 md:hidden">
+          <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Hub</span>
+          <NavLink
+            to="/settings"
+            aria-label="Settings"
+            className={({ isActive }) =>
+              clsx(
+                'flex h-9 w-9 items-center justify-center rounded-full transition-colors',
+                isActive
+                  ? 'bg-accent-100 text-accent-700 dark:bg-accent-900/40 dark:text-accent-300'
+                  : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800',
+              )
+            }
+          >
+            <Settings className="h-5 w-5" />
+          </NavLink>
+        </div>
         <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-8 sm:py-8">
           <Outlet context={{ openCapture: () => setCaptureOpen(true) } satisfies AppOutletContext} />
         </div>
@@ -86,11 +106,11 @@ export function AppShell() {
       {/* Mobile bottom nav */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden dark:border-slate-800 dark:bg-slate-950/95">
         <div className="grid grid-cols-5 items-center">
-          {NAV_ITEMS.slice(0, 2).map((item) => (
+          {MOBILE_NAV_ITEMS.slice(0, 2).map((item) => (
             <NavBarLink key={item.to} item={item} badge={item.to === '/inbox' ? inboxCount : undefined} />
           ))}
           <div />
-          {NAV_ITEMS.slice(2).map((item) => (
+          {MOBILE_NAV_ITEMS.slice(2).map((item) => (
             <NavBarLink key={item.to} item={item} badge={item.to === '/inbox' ? inboxCount : undefined} />
           ))}
         </div>

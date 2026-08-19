@@ -3,21 +3,28 @@ import { db } from './db'
 import {
   clearAllData,
   createEntry,
+  createProject,
   createTag,
   ensureDefaultTags,
+  getProject,
   listActiveEntries,
   listActiveTags,
+  listProjects,
   restoreEntry,
+  setProjectStatus,
   softDeleteEntry,
+  softDeleteProject,
   softDeleteTag,
   toggleTaskComplete,
   updateEntry,
+  updateProject,
 } from './repository'
 import { BUILTIN_TAG_PERSONAL, BUILTIN_TAG_WORK } from './types'
 
 beforeEach(async () => {
   await db.entries.clear()
   await db.tags.clear()
+  await db.projects.clear()
 })
 
 describe('createEntry', () => {
@@ -103,14 +110,62 @@ describe('softDeleteTag', () => {
   })
 })
 
+describe('createProject', () => {
+  it('starts active with sync-ready defaults', async () => {
+    const project = await createProject('  House renovation  ', '#4f46e5')
+    expect(project.name).toBe('House renovation')
+    expect(project.status).toBe('active')
+    expect(project.deletedAt).toBeNull()
+    expect(project.createdAt).toBe(project.updatedAt)
+  })
+})
+
+describe('updateProject / setProjectStatus', () => {
+  it('updateProject bumps updatedAt', async () => {
+    const project = await createProject('Trip', '#0d9488')
+    await new Promise((resolve) => setTimeout(resolve, 2))
+    await updateProject(project.id, { name: 'Europe trip' })
+    const updated = await getProject(project.id)
+    expect(updated?.name).toBe('Europe trip')
+    expect(updated?.updatedAt).toBeGreaterThan(project.updatedAt)
+  })
+
+  it('setProjectStatus archives and can unarchive', async () => {
+    const project = await createProject('Trip', '#0d9488')
+    await setProjectStatus(project.id, 'archived')
+    expect((await getProject(project.id))?.status).toBe('archived')
+    await setProjectStatus(project.id, 'active')
+    expect((await getProject(project.id))?.status).toBe('active')
+  })
+})
+
+describe('softDeleteProject', () => {
+  it('unassigns the project from every entry that carried it, leaving the entries', async () => {
+    const project = await createProject('House renovation', '#4f46e5')
+    const other = await createProject('Other', '#000000')
+    const a = await createEntry({ content: 'get quotes', projectId: project.id })
+    const b = await createEntry({ content: 'unrelated', projectId: other.id })
+
+    await softDeleteProject(project.id)
+
+    expect((await db.entries.get(a.id))?.projectId).toBeNull()
+    expect((await db.entries.get(b.id))?.projectId).toBe(other.id)
+    expect((await listProjects()).map((p) => p.id)).not.toContain(project.id)
+    // the entry itself survives — only the project link is removed
+    expect((await db.entries.get(a.id))?.deletedAt).toBeNull()
+  })
+})
+
 describe('clearAllData', () => {
-  it('wipes entries and tags, then reseeds the default tags', async () => {
+  it('wipes entries, tags, and projects, then reseeds the default tags', async () => {
     await createEntry({ content: 'x' })
     await createTag('Custom', '#111111')
+    await createProject('Some project', '#4f46e5')
 
     await clearAllData()
 
     expect(await listActiveEntries()).toEqual([])
+    expect(await listProjects()).toEqual([])
     const tags = await listActiveTags()
     expect(tags.map((t) => t.id).sort()).toEqual([BUILTIN_TAG_PERSONAL, BUILTIN_TAG_WORK].sort())
   })

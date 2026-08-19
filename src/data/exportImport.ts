@@ -1,5 +1,5 @@
 import { db } from './db'
-import type { Entry, Tag } from './types'
+import type { Entry, Project, Tag } from './types'
 
 /**
  * JSON backup / restore. Doubles as the only "sync" that exists today:
@@ -13,11 +13,17 @@ export interface ExportBundle {
   exportedAt: number
   entries: Entry[]
   tags: Tag[]
+  /** Optional only so a hypothetical pre-Projects export still imports cleanly. */
+  projects?: Project[]
 }
 
 export async function buildExportBundle(): Promise<ExportBundle> {
-  const [entries, tags] = await Promise.all([db.entries.toArray(), db.tags.toArray()])
-  return { schemaVersion: 1, exportedAt: Date.now(), entries, tags }
+  const [entries, tags, projects] = await Promise.all([
+    db.entries.toArray(),
+    db.tags.toArray(),
+    db.projects.toArray(),
+  ])
+  return { schemaVersion: 1, exportedAt: Date.now(), entries, tags, projects }
 }
 
 export function downloadExportBundle(bundle: ExportBundle): void {
@@ -37,7 +43,8 @@ export function downloadExportBundle(bundle: ExportBundle): void {
 function isExportBundle(value: unknown): value is ExportBundle {
   if (typeof value !== 'object' || value === null) return false
   const v = value as Record<string, unknown>
-  return v.schemaVersion === 1 && Array.isArray(v.entries) && Array.isArray(v.tags)
+  if (v.schemaVersion !== 1 || !Array.isArray(v.entries) || !Array.isArray(v.tags)) return false
+  return v.projects === undefined || Array.isArray(v.projects)
 }
 
 export async function parseImportFile(file: File): Promise<ExportBundle> {
@@ -57,6 +64,7 @@ export async function parseImportFile(file: File): Promise<ExportBundle> {
 export interface ImportResult {
   importedEntries: number
   importedTags: number
+  importedProjects: number
   skipped: number
 }
 
@@ -67,14 +75,24 @@ export interface ImportResult {
 export async function importBundle(bundle: ExportBundle): Promise<ImportResult> {
   let importedEntries = 0
   let importedTags = 0
+  let importedProjects = 0
   let skipped = 0
 
-  await db.transaction('rw', db.entries, db.tags, async () => {
+  await db.transaction('rw', db.entries, db.tags, db.projects, async () => {
     for (const tag of bundle.tags) {
       const existing = await db.tags.get(tag.id)
       if (!existing || existing.updatedAt < tag.updatedAt) {
         await db.tags.put(tag)
         importedTags++
+      } else {
+        skipped++
+      }
+    }
+    for (const project of bundle.projects ?? []) {
+      const existing = await db.projects.get(project.id)
+      if (!existing || existing.updatedAt < project.updatedAt) {
+        await db.projects.put(project)
+        importedProjects++
       } else {
         skipped++
       }
@@ -90,5 +108,5 @@ export async function importBundle(bundle: ExportBundle): Promise<ImportResult> 
     }
   })
 
-  return { importedEntries, importedTags, skipped }
+  return { importedEntries, importedTags, importedProjects, skipped }
 }

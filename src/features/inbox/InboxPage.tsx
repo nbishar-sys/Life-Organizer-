@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { Inbox as InboxIcon } from 'lucide-react'
 import { useEntries } from '../../hooks/useEntries'
 import { useTags } from '../../hooks/useTags'
+import { useProjects } from '../../hooks/useProjects'
 import { selectInboxEntries } from '../../data/selectors'
 import { InboxItem } from './InboxItem'
 import { EntryDetailSheet } from '../entries/EntryDetailSheet'
@@ -15,6 +16,7 @@ export function InboxPage() {
   const { openCapture } = useOutletContext<AppOutletContext>()
   const entries = useEntries()
   const tags = useTags() ?? []
+  const projects = useProjects() ?? []
   const [openEntry, setOpenEntry] = useState<Entry | null>(null)
 
   const inboxEntries = useMemo(() => (entries ? selectInboxEntries(entries) : []), [entries])
@@ -45,7 +47,7 @@ export function InboxPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {inboxEntries.map((entry) => (
-            <InboxItem key={entry.id} entry={entry} tags={tags} onOpen={setOpenEntry} />
+            <InboxItem key={entry.id} entry={entry} tags={tags} projects={projects} onOpen={setOpenEntry} />
           ))}
         </div>
       )}

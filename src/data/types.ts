@@ -21,6 +21,14 @@ export interface Entry {
   /** Tag ids this entry carries. Empty until the user triages it. */
   tagIds: string[]
 
+  /**
+   * Long-running "container" this entry belongs to (e.g. "House
+   * Renovation") — orthogonal to type/tags. A project entry can still be a
+   * dated task (shows up in Today like any other) or a bare idea with no
+   * date (stays parked in the project, out of the daily view).
+   */
+  projectId: string | null
+
   /** Task fields */
   completed: boolean
   completedAt: number | null
@@ -54,17 +62,35 @@ export interface Tag {
 export const BUILTIN_TAG_WORK = 'work'
 export const BUILTIN_TAG_PERSONAL = 'personal'
 
+export type ProjectStatus = 'active' | 'archived'
+
+/**
+ * A long-term, low-urgency container for related thoughts (e.g. "House
+ * Renovation") — for ideas you don't want to lose but that don't belong on
+ * a daily list. Entries opt into one via `Entry.projectId`.
+ */
+export interface Project {
+  id: string
+  name: string
+  color: string
+  status: ProjectStatus
+  createdAt: number
+  updatedAt: number
+  deletedAt: number | null
+}
+
 export interface NewEntryInput {
   content: string
   type?: EntryType
   tagIds?: string[]
+  projectId?: string | null
   dueDate?: string | null
   journalDate?: string | null
   pinned?: boolean
   source?: CaptureSource
 }
 
-/** An entry is "in the inbox" until it's given a tag, a due date, or a journal date. */
+/** An entry is "in the inbox" until it's given a tag, a due date, a journal date, or a project. */
 export function isUntriaged(entry: Entry): boolean {
-  return entry.tagIds.length === 0 && !entry.dueDate && !entry.journalDate
+  return entry.tagIds.length === 0 && !entry.dueDate && !entry.journalDate && !entry.projectId
 }

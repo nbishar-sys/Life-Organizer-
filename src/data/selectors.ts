@@ -54,6 +54,7 @@ export interface NotebookFilter {
   query?: string
   type?: EntryType | 'all'
   tagId?: string | 'all'
+  projectId?: string | 'all'
 }
 
 /** Pure reverse-chronological — pinned status is shown per-card (see EntryCard's
@@ -65,6 +66,9 @@ export function selectNotebookEntries(entries: Entry[], filter: NotebookFilter =
     .filter((e) => !e.deletedAt)
     .filter((e) => (filter.type && filter.type !== 'all' ? e.type === filter.type : true))
     .filter((e) => (filter.tagId && filter.tagId !== 'all' ? e.tagIds.includes(filter.tagId) : true))
+    .filter((e) =>
+      filter.projectId && filter.projectId !== 'all' ? e.projectId === filter.projectId : true,
+    )
     .filter((e) => (q ? e.content.toLowerCase().includes(q) : true))
     .sort((a, b) => b.createdAt - a.createdAt)
 }
@@ -72,4 +76,16 @@ export function selectNotebookEntries(entries: Entry[], filter: NotebookFilter =
 /** For a dedicated "Pinned" strip at the top of the Notebook. */
 export function selectPinnedEntries(entries: Entry[]): Entry[] {
   return entries.filter((e) => !e.deletedAt && e.pinned).sort((a, b) => b.updatedAt - a.updatedAt)
+}
+
+/** Every non-deleted entry parked in a given project, newest first. */
+export function selectProjectEntries(entries: Entry[], projectId: string): Entry[] {
+  return entries
+    .filter((e) => !e.deletedAt && e.projectId === projectId)
+    .sort((a, b) => b.createdAt - a.createdAt)
+}
+
+/** How many open (non-deleted, non-completed) entries a project is currently holding. */
+export function countOpenProjectEntries(entries: Entry[], projectId: string): number {
+  return entries.filter((e) => !e.deletedAt && e.projectId === projectId && !e.completed).length
 }

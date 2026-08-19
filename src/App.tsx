@@ -9,6 +9,8 @@ import { TodayPage } from './features/today/TodayPage'
 import { NotebookPage } from './features/notebook/NotebookPage'
 import { InboxPage } from './features/inbox/InboxPage'
 import { SettingsPage } from './features/settings/SettingsPage'
+import { ProjectsPage } from './features/projects/ProjectsPage'
+import { ProjectDetailPage } from './features/projects/ProjectDetailPage'
 import { ensureDefaultTags } from './data/repository'
 
 function Gated() {
@@ -21,6 +23,8 @@ function Gated() {
         <Route index element={<Navigate to="/today" replace />} />
         <Route path="today" element={<TodayPage />} />
         <Route path="notebook" element={<NotebookPage />} />
+        <Route path="projects" element={<ProjectsPage />} />
+        <Route path="projects/:id" element={<ProjectDetailPage />} />
         <Route path="inbox" element={<InboxPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/today" replace />} />

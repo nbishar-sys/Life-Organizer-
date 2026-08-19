@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { CheckCircle2, Plus, Sparkles } from 'lucide-react'
 import { useEntries } from '../../hooks/useEntries'
 import { useTags } from '../../hooks/useTags'
+import { useProjects } from '../../hooks/useProjects'
 import { selectCompletedToday, selectTodayJournalEntries, selectTodayTasks } from '../../data/selectors'
 import { EntryCard } from '../entries/EntryCard'
 import { EntryDetailSheet } from '../entries/EntryDetailSheet'
@@ -23,6 +24,7 @@ export function TodayPage() {
   const { openCapture } = useOutletContext<AppOutletContext>()
   const entries = useEntries()
   const tags = useTags() ?? []
+  const projects = useProjects() ?? []
   const [openEntry, setOpenEntry] = useState<Entry | null>(null)
 
   const tasks = useMemo(() => (entries ? selectTodayTasks(entries) : []), [entries])
@@ -58,7 +60,7 @@ export function TodayPage() {
         ) : (
           <div className="flex flex-col gap-2">
             {tasks.map((entry) => (
-              <EntryCard key={entry.id} entry={entry} tags={tags} onOpen={setOpenEntry} />
+              <EntryCard key={entry.id} entry={entry} tags={tags} projects={projects} onOpen={setOpenEntry} />
             ))}
           </div>
         )}
@@ -80,7 +82,7 @@ export function TodayPage() {
         ) : (
           <div className="flex flex-col gap-2">
             {journalEntries.map((entry) => (
-              <EntryCard key={entry.id} entry={entry} tags={tags} onOpen={setOpenEntry} />
+              <EntryCard key={entry.id} entry={entry} tags={tags} projects={projects} onOpen={setOpenEntry} />
             ))}
           </div>
         )}
@@ -91,7 +93,7 @@ export function TodayPage() {
           <SectionHeading title="Completed today" count={completedToday.length} />
           <div className="flex flex-col gap-2">
             {completedToday.map((entry) => (
-              <EntryCard key={entry.id} entry={entry} tags={tags} onOpen={setOpenEntry} />
+              <EntryCard key={entry.id} entry={entry} tags={tags} projects={projects} onOpen={setOpenEntry} />
             ))}
           </div>
         </section>

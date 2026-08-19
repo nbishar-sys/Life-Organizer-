@@ -1,21 +1,24 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from './db'
 import { buildExportBundle, importBundle, parseImportFile, type ExportBundle } from './exportImport'
-import { createEntry, createTag, listActiveEntries } from './repository'
+import { createEntry, createProject, createTag, listActiveEntries, listProjects } from './repository'
 
 beforeEach(async () => {
   await db.entries.clear()
   await db.tags.clear()
+  await db.projects.clear()
 })
 
 describe('buildExportBundle', () => {
-  it('captures every current entry and tag', async () => {
+  it('captures every current entry, tag, and project', async () => {
     const entry = await createEntry({ content: 'keep me' })
     const tag = await createTag('Errand', '#123456')
+    const project = await createProject('House renovation', '#4f46e5')
     const bundle = await buildExportBundle()
     expect(bundle.schemaVersion).toBe(1)
     expect(bundle.entries.map((e) => e.id)).toContain(entry.id)
     expect(bundle.tags.map((t) => t.id)).toContain(tag.id)
+    expect(bundle.projects?.map((p) => p.id)).toContain(project.id)
   })
 })
 
@@ -30,6 +33,7 @@ describe('importBundle', () => {
           content: 'from another device',
           type: 'note',
           tagIds: [],
+          projectId: null,
           completed: false,
           completedAt: null,
           dueDate: null,
@@ -46,6 +50,35 @@ describe('importBundle', () => {
     const result = await importBundle(bundle)
     expect(result.importedEntries).toBe(1)
     expect((await listActiveEntries()).map((e) => e.id)).toContain('remote-1')
+  })
+
+  it('imports projects with the same last-write-wins merge as entries/tags', async () => {
+    const bundle: ExportBundle = {
+      schemaVersion: 1,
+      exportedAt: Date.now(),
+      entries: [],
+      tags: [],
+      projects: [
+        {
+          id: 'remote-project',
+          name: 'From another device',
+          color: '#4f46e5',
+          status: 'active',
+          createdAt: 1000,
+          updatedAt: 1000,
+          deletedAt: null,
+        },
+      ],
+    }
+    const result = await importBundle(bundle)
+    expect(result.importedProjects).toBe(1)
+    expect((await listProjects()).map((p) => p.id)).toContain('remote-project')
+  })
+
+  it('treats a bundle with no `projects` field (pre-Projects backup) as having none, without failing', async () => {
+    const bundle: ExportBundle = { schemaVersion: 1, exportedAt: Date.now(), entries: [], tags: [] }
+    const result = await importBundle(bundle)
+    expect(result.importedProjects).toBe(0)
   })
 
   it('last-write-wins: a newer local edit is not clobbered by a stale import', async () => {

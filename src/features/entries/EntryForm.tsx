@@ -4,6 +4,7 @@ import clsx from 'clsx'
 import { Button } from '../../components/ui/Button'
 import { TagToggle } from '../../components/ui/TagToggle'
 import { useTags } from '../../hooks/useTags'
+import { useProjects } from '../../hooks/useProjects'
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition'
 import { addDays, todayStr } from '../../data/dates'
 import type { CaptureSource, Entry, EntryType } from '../../data/types'
@@ -12,6 +13,7 @@ export interface EntryFormValues {
   content: string
   type: EntryType
   tagIds: string[]
+  projectId: string | null
   dueDate: string | null
   journalDate: string | null
   pinned: boolean
@@ -47,9 +49,11 @@ export function EntryForm({
   onDraftChange,
 }: EntryFormProps) {
   const tags = useTags()
+  const projects = useProjects()
   const [content, setContent] = useState(initial?.content ?? '')
   const [type, setType] = useState<EntryType>(initial?.type ?? 'note')
   const [tagIds, setTagIds] = useState<string[]>(initial?.tagIds ?? [])
+  const [projectId, setProjectId] = useState<string | null>(initial?.projectId ?? null)
   const [dueDate, setDueDate] = useState<string | null>(initial?.dueDate ?? null)
   const [journalDate, setJournalDate] = useState<string | null>(initial?.journalDate ?? null)
   const [pinned, setPinned] = useState(initial?.pinned ?? false)
@@ -61,8 +65,17 @@ export function EntryForm({
   onDraftChangeRef.current = onDraftChange
 
   useEffect(() => {
-    onDraftChangeRef.current?.({ content, type, tagIds, dueDate, journalDate, pinned, source })
-  }, [content, type, tagIds, dueDate, journalDate, pinned, source])
+    onDraftChangeRef.current?.({
+      content,
+      type,
+      tagIds,
+      projectId,
+      dueDate,
+      journalDate,
+      pinned,
+      source,
+    })
+  }, [content, type, tagIds, projectId, dueDate, journalDate, pinned, source])
 
   const {
     isSupported,
@@ -101,6 +114,7 @@ export function EntryForm({
         content: trimmed,
         type,
         tagIds,
+        projectId,
         dueDate: type === 'task' ? dueDate : null,
         journalDate: type === 'journal' ? journalDate : null,
         pinned,
@@ -194,6 +208,10 @@ export function EntryForm({
         </button>
       </div>
 
+      {projects && projects.length > 0 && (
+        <ProjectPicker projects={projects} value={projectId} onChange={setProjectId} />
+      )}
+
       {type === 'task' && <DueDatePicker value={dueDate} onChange={setDueDate} />}
 
       {type === 'journal' && (
@@ -235,6 +253,35 @@ export function EntryForm({
           {submitLabel}
         </Button>
       </div>
+    </div>
+  )
+}
+
+function ProjectPicker({
+  projects,
+  value,
+  onChange,
+}: {
+  projects: Array<{ id: string; name: string; status: string }>
+  value: string | null
+  onChange: (id: string | null) => void
+}) {
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <span className="text-slate-500 dark:text-slate-400">Project</span>
+      <select
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value || null)}
+        className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 outline-none focus:border-accent-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+      >
+        <option value="">No project — everyday note</option>
+        {projects.map((project) => (
+          <option key={project.id} value={project.id}>
+            {project.name}
+            {project.status === 'archived' ? ' (archived)' : ''}
+          </option>
+        ))}
+      </select>
     </div>
   )
 }
