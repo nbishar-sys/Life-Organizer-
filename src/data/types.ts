@@ -58,9 +58,12 @@ export interface Tag {
   deletedAt: number | null
 }
 
-/** The two tags every fresh install starts with, used to split work/life at a glance. */
+/** The tags every fresh install starts with. Work/Personal split life at a
+ * glance; Feedback marks anything captured via the "report a bug or idea"
+ * button so it's easy to find and never mixed up with real journal content. */
 export const BUILTIN_TAG_WORK = 'work'
 export const BUILTIN_TAG_PERSONAL = 'personal'
+export const BUILTIN_TAG_FEEDBACK = 'feedback'
 
 export type ProjectStatus = 'active' | 'archived'
 

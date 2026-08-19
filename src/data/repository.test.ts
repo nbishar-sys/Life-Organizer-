@@ -19,7 +19,9 @@ import {
   updateEntry,
   updateProject,
 } from './repository'
-import { BUILTIN_TAG_PERSONAL, BUILTIN_TAG_WORK } from './types'
+import { BUILTIN_TAG_FEEDBACK, BUILTIN_TAG_PERSONAL, BUILTIN_TAG_WORK } from './types'
+
+const DEFAULT_TAG_IDS = [BUILTIN_TAG_PERSONAL, BUILTIN_TAG_WORK, BUILTIN_TAG_FEEDBACK].sort()
 
 beforeEach(async () => {
   await db.entries.clear()
@@ -85,12 +87,12 @@ describe('soft delete / restore', () => {
 })
 
 describe('ensureDefaultTags', () => {
-  it('seeds Work and Personal exactly once, safe to call repeatedly', async () => {
+  it('seeds the built-in tags exactly once each, safe to call repeatedly', async () => {
     await ensureDefaultTags()
     await ensureDefaultTags()
     const tags = await listActiveTags()
-    expect(tags).toHaveLength(2)
-    expect(tags.map((t) => t.id).sort()).toEqual([BUILTIN_TAG_PERSONAL, BUILTIN_TAG_WORK].sort())
+    expect(tags).toHaveLength(3)
+    expect(tags.map((t) => t.id).sort()).toEqual(DEFAULT_TAG_IDS)
   })
 })
 
@@ -167,6 +169,6 @@ describe('clearAllData', () => {
     expect(await listActiveEntries()).toEqual([])
     expect(await listProjects()).toEqual([])
     const tags = await listActiveTags()
-    expect(tags.map((t) => t.id).sort()).toEqual([BUILTIN_TAG_PERSONAL, BUILTIN_TAG_WORK].sort())
+    expect(tags.map((t) => t.id).sort()).toEqual(DEFAULT_TAG_IDS)
   })
 })

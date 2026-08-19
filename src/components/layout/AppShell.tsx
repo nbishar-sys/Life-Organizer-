@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { Plus, Settings } from 'lucide-react'
+import { Bug, Plus, Settings } from 'lucide-react'
 import clsx from 'clsx'
 import { MOBILE_NAV_ITEMS, NAV_ITEMS, type NavItem } from './navItems'
 import { useEntries } from '../../hooks/useEntries'
 import { selectInboxEntries } from '../../data/selectors'
 import { QuickCaptureSheet } from '../../features/capture/QuickCaptureSheet'
+import { FeedbackSheet } from '../../features/feedback/FeedbackSheet'
+import { IconButton } from '../ui/IconButton'
 import type { EntryFormValues } from '../../features/entries/EntryForm'
 import type { AppOutletContext } from './outletContext'
 
@@ -14,6 +16,8 @@ export function AppShell() {
   // Lives here (not inside the sheet) so an accidental tap-outside-to-close
   // doesn't discard a half-typed thought — reopening restores it.
   const [captureDraft, setCaptureDraft] = useState<Partial<EntryFormValues>>()
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [feedbackDraft, setFeedbackDraft] = useState<Partial<EntryFormValues>>()
   const entries = useEntries()
   const inboxCount = useMemo(() => (entries ? selectInboxEntries(entries).length : 0), [entries])
 
@@ -39,8 +43,11 @@ export function AppShell() {
     <div className="min-h-full md:flex">
       {/* Desktop sidebar */}
       <aside className="hidden shrink-0 border-r border-slate-100 md:flex md:w-56 md:flex-col md:py-6 dark:border-slate-800">
-        <div className="px-5 pb-6">
+        <div className="flex items-center justify-between px-5 pb-6">
           <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Hub</span>
+          <IconButton label="Report a bug or idea" onClick={() => setFeedbackOpen(true)}>
+            <Bug className="h-5 w-5" />
+          </IconButton>
         </div>
         <button
           type="button"
@@ -83,20 +90,25 @@ export function AppShell() {
             (see navItems.ts), so it needs a home here instead. */}
         <div className="flex items-center justify-between px-4 pt-4 md:hidden">
           <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Hub</span>
-          <NavLink
-            to="/settings"
-            aria-label="Settings"
-            className={({ isActive }) =>
-              clsx(
-                'flex h-9 w-9 items-center justify-center rounded-full transition-colors',
-                isActive
-                  ? 'bg-accent-100 text-accent-700 dark:bg-accent-900/40 dark:text-accent-300'
-                  : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800',
-              )
-            }
-          >
-            <Settings className="h-5 w-5" />
-          </NavLink>
+          <div className="flex items-center gap-1">
+            <IconButton label="Report a bug or idea" onClick={() => setFeedbackOpen(true)}>
+              <Bug className="h-5 w-5" />
+            </IconButton>
+            <NavLink
+              to="/settings"
+              aria-label="Settings"
+              className={({ isActive }) =>
+                clsx(
+                  'flex h-9 w-9 items-center justify-center rounded-full transition-colors',
+                  isActive
+                    ? 'bg-accent-100 text-accent-700 dark:bg-accent-900/40 dark:text-accent-300'
+                    : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800',
+                )
+              }
+            >
+              <Settings className="h-5 w-5" />
+            </NavLink>
+          </div>
         </div>
         <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-8 sm:py-8">
           <Outlet context={{ openCapture: () => setCaptureOpen(true) } satisfies AppOutletContext} />
@@ -129,6 +141,12 @@ export function AppShell() {
         onClose={() => setCaptureOpen(false)}
         draft={captureDraft}
         onDraftChange={setCaptureDraft}
+      />
+      <FeedbackSheet
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        draft={feedbackDraft}
+        onDraftChange={setFeedbackDraft}
       />
     </div>
   )

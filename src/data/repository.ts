@@ -1,6 +1,7 @@
 import { db } from './db'
 import { newId } from './id'
 import {
+  BUILTIN_TAG_FEEDBACK,
   BUILTIN_TAG_PERSONAL,
   BUILTIN_TAG_WORK,
   type Entry,
@@ -123,9 +124,12 @@ export async function listActiveTags(): Promise<Tag[]> {
 const DEFAULT_TAGS: Array<{ id: string; name: string; color: string }> = [
   { id: BUILTIN_TAG_WORK, name: 'Work', color: '#4f46e5' },
   { id: BUILTIN_TAG_PERSONAL, name: 'Personal', color: '#0d9488' },
+  { id: BUILTIN_TAG_FEEDBACK, name: 'Feedback', color: '#dc2626' },
 ]
 
-/** Seeds the two built-in tags exactly once. Cheap to call on every app start. */
+/** Seeds the built-in tags exactly once each. Cheap to call on every app
+ * start — an existing install picks up newly-added defaults (like Feedback)
+ * automatically since only genuinely-missing ones get inserted. */
 export async function ensureDefaultTags(): Promise<void> {
   await db.transaction('rw', db.tags, async () => {
     for (const tag of DEFAULT_TAGS) {
