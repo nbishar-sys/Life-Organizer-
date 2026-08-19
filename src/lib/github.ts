@@ -4,7 +4,7 @@
  * title/body already typed in; the user still reviews and clicks "Submit"
  * themselves.
  */
-const REPO = 'nbishar-sys/arborvacuum-central-hub'
+const REPO = 'nbishar-sys/life-organizer-'
 
 export function buildGithubIssueUrl(title: string, body: string): string {
   const params = new URLSearchParams({ title, body, labels: 'feedback' })

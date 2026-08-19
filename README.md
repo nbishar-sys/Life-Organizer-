@@ -69,10 +69,9 @@ set **Build and deployment → Source** to **GitHub Actions**. After that,
 every push to `main` redeploys, and the workflow's summary/Deployments tab
 has the live URL.
 
-The app is built with a base path of `/arborvacuum-central-hub/` to match
-this repo's name as a GitHub Pages project site (see `vite.config.ts`) — if
-you ever rename the repo or move to a custom domain, update `REPO_NAME`
-there.
+The app is built with a base path of `/life-organizer-/` to match this
+repo's name as a GitHub Pages project site (see `vite.config.ts`) — if you
+ever rename the repo or move to a custom domain, update `REPO_NAME` there.
 
 ## Architecture
 

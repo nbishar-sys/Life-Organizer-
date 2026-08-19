@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 // This app is deployed as a GitHub Pages *project* site, so production
 // builds need every asset URL prefixed with the repo name. The dev server
 // stays at "/" so `npm run dev` keeps working normally.
-const REPO_NAME = 'arborvacuum-central-hub'
+const REPO_NAME = 'life-organizer-'
 
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
